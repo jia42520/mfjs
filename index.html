@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>介绍生成器</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      color: #1f2937;
+      background: linear-gradient(135deg, #ecfdf5 0%, #f8fafc 45%, #dcfce7 100%);
+    }
+
+    .page {
+      width: min(1200px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 36px 0;
+    }
+
+    .hero {
+      padding: 30px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+      backdrop-filter: blur(14px);
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4vw, 44px);
+      color: #0f172a;
+      letter-spacing: -1px;
+    }
+
+    .hero p {
+      margin: 0;
+      font-size: 16px;
+      color: #64748b;
+      line-height: 1.8;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 22px 60px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 22px 24px;
+      border-bottom: 1px solid #e2e8f0;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .panel-header h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #0f172a;
+    }
+
+    .form {
+      padding: 24px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .field {
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      background: #ffffff;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .option-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      background: #ecfdf5;
+      box-shadow: inset 0 0 0 1px #bbf7d0;
+      font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Microsoft YaHei", sans-serif;
+      font-size: 16px;
+      line-height: 1;
+      flex: none;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 12px 13px;
+      font: inherit;
+      color: #0f172a;
+      outline: none;
+      background: #f8fafc;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+      line-height: 1.7;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #16a34a;
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #64748b;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .switch input {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+    }
+
+    .slider {
+      width: 42px;
+      height: 24px;
+      border-radius: 999px;
+      background: #cbd5e1;
+      transition: background 0.2s;
+      position: relative;
+      flex: none;
+    }
+
+    .slider::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+      transition: transform 0.2s;
+    }
+
+    .switch input:checked + .slider {
+      background: #16a34a;
+    }
+
+    .switch input:checked + .slider::after {
+      transform: translateX(18px);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary {
+      color: #ffffff;
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      box-shadow: 0 12px 24px rgba(22, 163, 74, 0.22);
+    }
+
+    .secondary {
+      color: #1e293b;
+      background: #e2e8f0;
+    }
+
+    .quick-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .quick-option,
+    .add-system-btn {
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: #166534;
+      background: #dcfce7;
+      box-shadow: inset 0 0 0 1px #bbf7d0;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .quick-option.active {
+      color: #ffffff;
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      box-shadow: 0 8px 18px rgba(22, 163, 74, 0.2);
+    }
+
+    .add-system {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .add-system input {
+      min-width: 0;
+    }
+
+    .success-message {
+      display: none;
+      align-items: center;
+      color: #15803d;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .success-message.show {
+      display: inline-flex;
+    }
+
+    .preview-wrap {
+      padding: 24px;
+    }
+
+    .product-card {
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px solid #bbf7d0;
+      background: #ffffff;
+      box-shadow: 0 20px 50px rgba(21, 128, 61, 0.14);
+    }
+
+    .product-title {
+      padding: 24px;
+      color: #ffffff;
+      background: linear-gradient(135deg, #16a34a, #14532d);
+    }
+
+    .product-title h3 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+
+    .product-title p {
+      margin: 0;
+      color: #dcfce7;
+      line-height: 1.7;
+    }
+
+    .spec-list {
+      display: grid;
+      gap: 12px;
+      padding: 20px;
+    }
+
+    .spec-item {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 14px;
+      padding: 13px 14px;
+      border-radius: 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+
+    .spec-label {
+      color: #64748b;
+      font-weight: 700;
+    }
+
+    .spec-value {
+      color: #0f172a;
+      font-weight: 700;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .code-output {
+      width: 100%;
+      min-height: 260px;
+      margin-top: 20px;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 13px;
+      color: #dcfce7;
+      border: 1px solid #1e293b;
+      background: #0f172a;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-wrap {
+        overflow-x: hidden;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .page {
+        width: min(100% - 24px, 1200px);
+      }
+
+      .hero h1 {
+        font-size: clamp(26px, 6vw, 36px);
+      }
+
+      .field-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        width: min(100% - 20px, 1200px);
+        padding: 20px 0;
+      }
+
+      .hero,
+      .form,
+      .preview-wrap {
+        padding: 18px;
+      }
+
+      .field-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .spec-item {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      input,
+      textarea,
+      button {
+        font-size: 16px;
+      }
+    }
+
+      @media (max-width: 420px) {
+      .hero h1 {
+        font-size: 24px;
+      }
+
+      .hero p {
+        font-size: 14px;
+      }
+
+      .panel-header h2 {
+        font-size: 18px;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .add-system {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>介绍生成器</h1>
+      <p>填写服务器配置，按需控制每一项是否显示，右侧会实时生成可复制的 HTML 介绍代码。</p>
+    </section>
+
+    <section class="layout">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>配置内容</h2>
+          <button class="secondary" type="button" id="toggleAllBtn">全部隐藏</button>
+        </div>
+        <form class="form" id="serverForm">
+          <div class="field-grid" id="fields"></div>
+          <div class="actions">
+            <button class="primary" type="button" id="copyBtn">一键复制结果</button>
+            <button class="secondary" type="button" id="resetBtn">恢复默认示例</button>
+            <span class="success-message" id="copyMessage">已复制到剪贴板</span>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h2>实时预览</h2>
+        </div>
+        <div class="preview-wrap">
+          <div id="preview"></div>
+          <textarea class="code-output" id="output" readonly aria-label="生成的 HTML 代码"></textarea>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const fieldConfigs = [
+      { key: "cpu", label: "CPU型号", icon: "🧠", value: "Intel Xeon E5-2680 v4" },
+      { key: "memory", label: "内存大小", icon: "💾", value: "32GB DDR4" },
+      { key: "route", label: "线路", icon: "🌐", value: "CN2 GIA / BGP 优化线路" },
+      { key: "ipCount", label: "IP数量", icon: "🔢", value: "1个独享 IPv4" },
+      { key: "bandwidth", label: "带宽大小", icon: "⚡", value: "100Mbps 独享" },
+      { key: "disk", label: "系统盘大小", icon: "🗄️", value: "80GB SSD" },
+      { key: "dataDisk", label: "数据盘大小", icon: "💽", value: "100GB SSD" },
+      { key: "defense", label: "防御", icon: "🛡️", value: "100Gbps 防御" },
+      { key: "systems", label: "可用系统", icon: "🖥️", value: "CentOS、Debian、Ubuntu、Windows Server", full: true, textarea: true, options: ["CentOS", "Debian", "Ubuntu", "Windows Server"] }
+    ];
+
+    const fieldsEl = document.getElementById("fields");
+    const previewEl = document.getElementById("preview");
+    const outputEl = document.getElementById("output");
+    const copyBtn = document.getElementById("copyBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const toggleAllBtn = document.getElementById("toggleAllBtn");
+    const copyMessage = document.getElementById("copyMessage");
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function createField(config) {
+      const wrapper = document.createElement("div");
+      wrapper.className = config.full ? "field full" : "field";
+      const inputTag = config.textarea ? "textarea" : "input";
+      const quickOptions = config.options ? `
+        <div class="quick-options" data-options="${config.key}">
+          ${config.options.map((option) => `<button class="quick-option" type="button" data-system-option="${escapeHtml(option)}">${escapeHtml(option)}</button>`).join("")}
+        </div>
+        <div class="add-system">
+          <input type="text" id="${config.key}Custom" placeholder="输入其他系统名称">
+          <button class="add-system-btn" type="button" data-add-system="${config.key}">增加系统</button>
+        </div>` : "";
+      wrapper.innerHTML = `
+        <div class="field-top">
+          <label for="${config.key}"><span class="option-icon">${config.icon}</span>${config.label}</label>
+          <label class="switch">
+            <input type="checkbox" id="${config.key}Visible" data-visible="${config.key}" checked>
+            <span class="slider"></span>
+            显示
+          </label>
+        </div>
+        <${inputTag} id="${config.key}" data-key="${config.key}" ${config.textarea ? "" : "type=\"text\""}>${config.textarea ? escapeHtml(config.value) : ""}</${inputTag}>
+        ${quickOptions}
+      `;
+
+      const input = wrapper.querySelector(`[data-key="${config.key}"]`);
+      if (!config.textarea) {
+        input.value = config.value;
+      }
+      return wrapper;
+    }
+
+    function getFieldValue(key) {
+      return document.querySelector(`[data-key="${key}"]`).value.trim();
+    }
+
+    function isVisible(key) {
+      return document.querySelector(`[data-visible="${key}"]`).checked;
+    }
+
+    function splitSystems(value) {
+      return value
+        .split(/[、,，\n]+/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    function setSystems(items) {
+      const uniqueItems = [...new Set(items)];
+      document.querySelector('[data-key="systems"]').value = uniqueItems.join("、");
+      updateSystemButtons();
+      updateOutput();
+    }
+
+    function updateSystemButtons() {
+      const systemInput = document.querySelector('[data-key="systems"]');
+      if (!systemInput) {
+        return;
+      }
+      const selectedSystems = splitSystems(systemInput.value);
+      document.querySelectorAll("[data-system-option]").forEach((button) => {
+        button.classList.toggle("active", selectedSystems.includes(button.dataset.systemOption));
+      });
+    }
+
+    function toggleSystem(system) {
+      const systems = splitSystems(getFieldValue("systems"));
+      if (systems.includes(system)) {
+        setSystems(systems.filter((item) => item !== system));
+        return;
+      }
+      setSystems([...systems, system]);
+    }
+
+    function addCustomSystem() {
+      const customInput = document.getElementById("systemsCustom");
+      const system = customInput.value.trim();
+      if (!system) {
+        return;
+      }
+      setSystems([...splitSystems(getFieldValue("systems")), system]);
+      customInput.value = "";
+    }
+
+    function getVisibleSpecs() {
+      return fieldConfigs
+        .filter((config) => isVisible(config.key) && getFieldValue(config.key))
+        .map((config) => ({ label: config.label, icon: config.icon, value: getFieldValue(config.key) }));
+    }
+
+    function buildProductHtml() {
+      const specs = getVisibleSpecs();
+      const specHtml = specs.map((item) => `
+    <div style="display:grid;grid-template-columns:minmax(120px,0.38fr) minmax(0,1fr);gap:14px;padding:13px 14px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;align-items:start;max-width:100%;">
+      <div style="display:flex;align-items:center;min-width:0;color:#64748b;font-weight:700;font-size:clamp(14px,3.6vw,16px);line-height:1.7;word-break:break-word;overflow-wrap:anywhere;"><span style="display:inline-flex;align-items:center;justify-content:center;width:26px;min-width:26px;height:26px;margin-right:8px;border-radius:8px;background:#ecfdf5;box-shadow:inset 0 0 0 1px #bbf7d0;font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji','Microsoft YaHei',sans-serif;font-size:15px;line-height:1;vertical-align:middle;">${escapeHtml(item.icon)}</span><span style="min-width:0;">${escapeHtml(item.label)}</span></div>
+      <div style="min-width:0;color:#0f172a;font-weight:700;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;font-size:clamp(14px,3.6vw,16px);line-height:1.7;">${escapeHtml(item.value)}</div>
+    </div>`).join("");
+
+      return `<div style="width:100%;max-width:760px;margin:0 auto;border-radius:22px;overflow:hidden;border:1px solid #bbf7d0;background:#ffffff;box-shadow:0 20px 50px rgba(21,128,61,0.14);font-family:'Microsoft YaHei','Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',Arial,sans-serif;-webkit-text-size-adjust:100%;text-size-adjust:100%;">
+  <div style="display:grid;gap:12px;padding:clamp(16px,4vw,20px);max-width:100%;">
+    ${specHtml || `<div style="padding:16px;border-radius:14px;background:#f8fafc;color:#64748b;text-align:center;font-size:clamp(14px,3.6vw,16px);line-height:1.7;">暂无显示的配置项</div>`}
+  </div>
+</div>`;
+    }
+
+    function updateOutput() {
+      const html = buildProductHtml();
+      previewEl.innerHTML = html;
+      outputEl.value = html;
+      updateSystemButtons();
+      const allVisible = fieldConfigs.every((config) => isVisible(config.key));
+      toggleAllBtn.textContent = allVisible ? "全部隐藏" : "全部显示";
+    }
+
+    async function copyOutput() {
+      const html = outputEl.value;
+      try {
+        await navigator.clipboard.writeText(html);
+      } catch (error) {
+        outputEl.select();
+        document.execCommand("copy");
+      }
+      copyMessage.classList.add("show");
+      setTimeout(() => copyMessage.classList.remove("show"), 1800);
+    }
+
+    function resetDefaults() {
+      fieldConfigs.forEach((config) => {
+        document.querySelector(`[data-key="${config.key}"]`).value = config.value;
+        document.querySelector(`[data-visible="${config.key}"]`).checked = true;
+      });
+      updateOutput();
+    }
+
+    function toggleAll() {
+      const shouldShow = !fieldConfigs.every((config) => isVisible(config.key));
+      fieldConfigs.forEach((config) => {
+        document.querySelector(`[data-visible="${config.key}"]`).checked = shouldShow;
+      });
+      updateOutput();
+    }
+
+    fieldConfigs.forEach((config) => fieldsEl.appendChild(createField(config)));
+    fieldsEl.addEventListener("input", updateOutput);
+    fieldsEl.addEventListener("change", updateOutput);
+    fieldsEl.addEventListener("click", (event) => {
+      if (event.target.dataset.systemOption) {
+        toggleSystem(event.target.dataset.systemOption);
+      }
+      if (event.target.dataset.addSystem) {
+        addCustomSystem();
+      }
+    });
+    fieldsEl.addEventListener("keydown", (event) => {
+      if (event.target.id === "systemsCustom" && event.key === "Enter") {
+        event.preventDefault();
+        addCustomSystem();
+      }
+    });
+    copyBtn.addEventListener("click", copyOutput);
+    resetBtn.addEventListener("click", resetDefaults);
+    toggleAllBtn.addEventListener("click", toggleAll);
+    updateOutput();
+  </script>
+</body>
+</html>
